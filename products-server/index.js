@@ -11,7 +11,7 @@ const SELECT_ALL_PRODUCTS = 'SELECT * FROM products';
 const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: 'djmysql',
+  password: 'YOURPASSWORD',
   database: 'node_mysql'
 });
 

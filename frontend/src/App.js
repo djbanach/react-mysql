@@ -1,29 +1,13 @@
 import React, { Component } from 'react';
 import './App.css';
 import AppBarTop from './Components/AppBarTop';
-import { makeStyles } from '@material-ui/core/styles';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import Paper from '@material-ui/core/Paper';
+import MaterialTable from 'material-table';
 
-// const useStyles = makeStyles(theme => ({
-//   root: {
-//     width: '100%',
-//     marginTop: theme.spacing(3),
-//     overflowX: 'auto',
-//   },
-//   table: {
-//     minWidth: 650,
-//   },
-// }));
 
 class App extends Component {
 
   state = {
-    products: []
+    data: []
   }
 
   componentDidMount() {
@@ -33,39 +17,65 @@ class App extends Component {
   getProducts = _ => {
     fetch('http://localhost:4000/products')
     .then(response => response.json())
-    .then(response => this.setState({ products: response.data }))
+    .then(response => this.setState({ data: response.data }))
     .catch(err => console.error(err))
   }
 
 
   render() {
-    const { products } = this.state;
+    const { data } = this.state;
 
     return (
       <div className="App">
         <AppBarTop />
-        <Paper>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell align="right">Amount</TableCell>
-                <TableCell align="right">Price</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {products.map(product => (
-                <TableRow key={product.product_id}>
-                  <TableCell component="th" scope="row">
-                    {product.name}
-                  </TableCell>
-                  <TableCell align="right">{product.amount}</TableCell>
-                  <TableCell align="right">{product.price}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Paper>
+        <MaterialTable title="Products"
+        columns={[
+          { title: 'Name', field: 'name' },
+          { title: 'Amount', field: 'amount' },
+          { title: 'Price', field: 'price' },
+        ]}
+        data={() =>
+          new Promise((resolve, reject) => {
+            let url = 'http://localhost:4000/products'
+            fetch(url)
+            .then(response => response.json())
+            .then(result => {
+              resolve({
+                data: result.data,
+              })
+            })
+          })
+        }
+        editable={{
+          onRowAdd: newData =>
+            new Promise((resolve, reject) => {
+              let url = 'http://localhost:4000/products/add?'
+              url += 'name=' + newData.name
+              url += '&price=' + newData.price
+              url += '&amount=' + newData.amount
+              fetch(url)
+              .then(result => {
+                resolve({
+                  data: result.newData
+                })
+              })
+            }),
+          onRowDelete: oldData =>
+            new Promise((resolve, reject) => {
+              let url = 'http://localhost:4000/products/'
+              url += oldData.product_id
+              fetch(url)
+              .then(result => {
+                resolve({
+                  data: result.oldData
+                })
+              })
+            }),
+        }}
+        options={{
+          search: true
+        }}
+        />
       </div>
     );
   }
